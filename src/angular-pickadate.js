@@ -147,7 +147,7 @@
           defaultDate: '=',
           minDate: '=',
           maxDate: '=',
-          disabledDates: '=',
+          enabledDates: '=',
           weekStartsOn: '=',
         },
 
@@ -168,7 +168,7 @@
           }
 
           scope.setDate = function(dateObj) {
-            if (isOutOfRange(dateObj.dateObj) || isDateDisabled(dateObj.date)) return;
+            if (isOutOfRange(dateObj.dateObj) || !isDateEnabled(dateObj.date)) return;
             selectedDates = allowMultiple ? toggleDate(dateObj.date, selectedDates) : [dateObj.date];
             setViewValue(selectedDates);
             scope.displayPicker = !wantsModal;
@@ -209,7 +209,7 @@
 
           // Workaround to watch multiple properties. XXX use $scope.$watchGroup in angular 1.3
           scope.$watch(function(){
-            return angular.toJson([scope.minDate, scope.maxDate, scope.disabledDates]);
+            return angular.toJson([scope.minDate, scope.maxDate, scope.enabledDates]);
           }, function() {
             minDate = dateUtils.parseDate(scope.minDate, format) || new Date(0);
             maxDate = dateUtils.parseDate(scope.maxDate, format) || new Date(99999999999999);
@@ -289,15 +289,15 @@
               var classNames = [],
                   dateObj    = allDates[i],
                   date       = dateFilter(dateObj, format),
-                  isDisabled = isDateDisabled(date);
+                  isEnabled = isDateEnabled(date);
 
-              if (isOutOfRange(dateObj) || isDisabled) {
+              if (isOutOfRange(dateObj) || !isEnabled) {
                 classNames.push('pickadate-disabled');
               } else {
                 classNames.push('pickadate-enabled');
               }
 
-              if (isDisabled)     classNames.push('pickadate-unavailable');
+              if (!isEnabled)     classNames.push('pickadate-unavailable');
               if (date === today) classNames.push('pickadate-today');
 
               dates.push({date: date, dateObj: dateObj, classNames: classNames});
@@ -323,7 +323,7 @@
             for (var i = 0; i < dateArray.length; i++) {
               var date = dateArray[i];
 
-              if (!isDateDisabled(date) && !isOutOfRange(dateUtils.parseDate(date, format))) {
+              if (isDateEnabled(date) && !isOutOfRange(dateUtils.parseDate(date, format))) {
                 resultArray.push(date);
               }
             }
@@ -335,8 +335,8 @@
             return date < minDate || date > maxDate || dateFilter(date, 'M') !== dateFilter(scope.currentDate, 'M');
           }
 
-          function isDateDisabled(date) {
-            return indexOf.call(scope.disabledDates || [], date) >= 0;
+          function isDateEnabled(date) {
+            return indexOf.call(scope.enabledDates || [], date) >= 0;
           }
 
           function toggleDate(date, dateArray) {
